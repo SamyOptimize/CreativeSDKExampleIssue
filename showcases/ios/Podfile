@@ -1,77 +1,164 @@
+ #Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+
+# $RNFirebaseAsStaticFramework = true
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
-require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
+# require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
+# require File.join(File.dirname(`node --print "require.resolve('@react-native-community/cli-platform-ios/package.json')"`), "native_modules")
 
+platform :ios, '16'
+prepare_react_native_project!
 require 'json'
-podfile_properties = JSON.parse(File.read(File.join(__dir__, 'Podfile.properties.json'))) rescue {}
-
-ENV['RCT_NEW_ARCH_ENABLED'] = podfile_properties['newArchEnabled'] == 'true' ? '1' : '0'
-ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] = podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
-
-use_autolinking_method_symbol = ('use' + '_native' + '_modules!').to_sym
-origin_autolinking_method = self.method(use_autolinking_method_symbol)
-self.define_singleton_method(use_autolinking_method_symbol) do |*args|
-  if ENV['EXPO_UNSTABLE_CORE_AUTOLINKING'] == '1'
-    Pod::UI.puts('Using expo-modules-autolinking as core autolinking source'.green)
-    config_command = [
-      'node',
-      '--no-warnings',
-      '--eval',
-      'require(require.resolve(\'expo-modules-autolinking\', { paths: [require.resolve(\'expo/package.json\')] }))(process.argv.slice(1))',
-      'react-native-config',
-      '--json',
-      '--platform',
-      'ios'
-    ]
-    origin_autolinking_method.call(config_command)
-  else
-    origin_autolinking_method.call()
-  end
+podfile_properties = JSON.parse(File.read('./Podfile.properties.json')) rescue {}
+use_modular_headers!
+linkage = ENV['USE_FRAMEWORKS']
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
 end
 
-platform :ios, podfile_properties['ios.deploymentTarget'] || '13.4'
-install! 'cocoapods',
-  :deterministic_uuids => false
-
-prepare_react_native_project!
-
 target 'showcases' do
+
+
   use_expo_modules!
+  pod 'sovran-react-native', :path => '../node_modules/@segment/sovran-react-native'
+
+  pod 'RNGoogleSignin', :path => '../node_modules/@react-native-google-signin/google-signin'
+
+
+  pod 'Firebase', :modular_headers => true
+  pod 'FirebaseAppCheck', :modular_headers => true
+
+  pod 'FirebaseCore', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
+  $RNFirebaseAsStaticFramework = true
+  post_integrate do |installer|
+    begin
+      expo_patch_react_imports!(installer)
+    rescue => e
+      Pod::UI.warn e
+    end
+  end
+  pod 'react-native-ffmpeg/https-gpl-lts', :podspec => '../node_modules/react-native-ffmpeg/react-native-ffmpeg.podspec'
+
+  # rn_maps_path = '../node_modules/react-native-maps'
+  # pod 'react-native-google-maps', :path => rn_maps_path
+  # pod 'GoogleMaps'
+  # pod 'Google-Maps-iOS-Utils'
+
   config = use_native_modules!
 
-  use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
-  use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
-
-  if ENV['BUILD_TYPE'] == 'source'
-    pod 'IMGLYEngine', path: "#{ENV['SOURCE_POD_PATH_ENGINE']}/IMGLYEngine.podspec"
-    pod 'IMGLYUI', path: "#{ENV['SOURCE_POD_PATH']}/IMGLYUI.podspec"
-    pod 'IMGLYCore', path: "#{ENV['SOURCE_POD_PATH']}/IMGLYCore.podspec"
-    pod 'IMGLYCoreUI', path: "#{ENV['SOURCE_POD_PATH']}/IMGLYCoreUI.podspec"
-    pod 'IMGLYCamera', path: "#{ENV['SOURCE_POD_PATH']}/IMGLYCamera.podspec"
-    pod 'IMGLYEditor', path: "#{ENV['SOURCE_POD_PATH']}/IMGLYEditor.podspec"
-    pod 'IMGLYApparelEditor', path: "#{ENV['SOURCE_POD_PATH']}/IMGLYApparelEditor.podspec"
-    pod 'IMGLYPhotoEditor', path: "#{ENV['SOURCE_POD_PATH']}/IMGLYPhotoEditor.podspec"
-    pod 'IMGLYDesignEditor', path: "#{ENV['SOURCE_POD_PATH']}/IMGLYDesignEditor.podspec"
-    pod 'IMGLYPostcardEditor', path: "#{ENV['SOURCE_POD_PATH']}/IMGLYPostcardEditor.podspec"
-    pod 'IMGLYVideoEditor', path: "#{ENV['SOURCE_POD_PATH']}/IMGLYVideoEditor.podspec"
-  end
-
+  # Flags change depending on the env values.
+  flags = get_default_flags()
   use_react_native!(
     :path => config[:reactNativePath],
-    :hermes_enabled => podfile_properties['expo.jsEngine'] == nil || podfile_properties['expo.jsEngine'] == 'hermes',
+    # Hermes is now enabled by default. Disable by setting this flag to false.
+    # Upcoming versions of React Native may rely on get_default_flags(), but
+    # we make it explicit here to aid in the React Native upgrade process.
+    # :hermes_enabled => podfile_properties['expo.jsEngine'] == 'hermes',
+    :hermes_enabled => true,
+    :fabric_enabled => flags[:fabric_enabled],
     # An absolute path to your application root.
-    :app_path => "#{Pod::Config.instance.installation_root}/..",
-    :privacy_file_aggregation_enabled => podfile_properties['apple.privacyManifestAggregationEnabled'] != 'false',
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  post_install do |installer|
-    react_native_post_install(
-      installer,
-      config[:reactNativePath],
-      :mac_catalyst_enabled => false,
-      :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
-    )
+  pod 'react-native-ffmpeg/https-gpl-lts', :podspec => '../node_modules/react-native-ffmpeg/react-native-ffmpeg.podspec'
 
-    # This is necessary for Xcode 14, because it signs resource bundles by default
+
+  pod 'RNDeviceInfo', :path => '../node_modules/react-native-device-info'
+
+  # pod 'RNAnalyticsIntegration-Mixpanel', :path => '../node_modules/@segment/analytics-react-native-mixpanel'
+
+  pod 'RNVideoEditorSDK', :path => '../node_modules/react-native-videoeditorsdk'
+
+  
+  pod 'RNSentry', :path => '../node_modules/@sentry/react-native'
+
+  pod 'RNPhotoEditorSDK', :path => '../node_modules/react-native-photoeditorsdk'
+
+  # pod 'react-native-adjust', :path => '../node_modules/react-native-adjust'
+
+  pod 'lottie-react-native', :path => '../node_modules/lottie-react-native'
+
+  pod 'RNBootSplash', :path => '../node_modules/react-native-bootsplash'
+
+
+  pod 'react-native-blur', :path => '../node_modules/@react-native-community/blur'
+
+  pod 'RNCMaskedView', :path => '../node_modules/@react-native-community/masked-view'
+
+  pod 'react-native-idfa',  path: '../node_modules/react-native-idfa'
+
+
+  pod 'RNSVG', :path => '../node_modules/react-native-svg'
+
+  pod 'RNCClipboard', :path => '../node_modules/@react-native-clipboard/clipboard'
+
+  pod 'react-native-fbsdk-next', :path => '../node_modules/react-native-fbsdk-next'
+  
+  pod 'customerio-reactnative/apn', :path => '../node_modules/customerio-reactnative'
+
+  pod 'react-native-biometrics', :path => '../node_modules/react-native-biometrics', :modular_headers => true
+  cio_target_names = [
+      'Gist',
+      'CustomerIOTracking',
+      'CustomerIOCommon',
+      'CustomerIOMessagingPushAPN',
+      'CustomerIOMessagingPush'
+    ]
+ 
+  post_install do |installer|
+    bitcode_strip_path = `xcrun --find bitcode_strip`.chop!
+   def strip_bitcode_from_framework(bitcode_strip_path, framework_relative_path)
+     framework_path = File.join(Dir.pwd, framework_relative_path)
+     command = "#{bitcode_strip_path} #{framework_path} -r -o #{framework_path}"
+     puts "Stripping bitcode: #{command}"
+     system(command)
+   end
+
+   framework_paths = [
+     "Pods/hermes-engine/destroot/Library/Frameworks/macosx/hermes.framework/hermes",
+     "Pods/hermes-engine/destroot/Library/Frameworks/macosx/hermes.framework/Versions/Current/hermes",
+     "Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.xcframework/ios-arm64/hermes.framework/hermes",
+     "Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.xcframework/ios-arm64_x86_64-maccatalyst/hermes.framework/hermes"
+   ]
+
+   framework_paths.each do |framework_relative_path|
+     strip_bitcode_from_framework(bitcode_strip_path, framework_relative_path)
+   end
+     # fix xcode 15 DT_TOOLCHAIN_DIR - remove after fix oficially - https://github.com/CocoaPods/CocoaPods/issues/12065
+    installer.aggregate_targets.each do |target|
+        target.xcconfigs.each do |variant, xcconfig|
+        xcconfig_path = target.client_root + target.xcconfig_relative_path(variant)
+        IO.write(xcconfig_path, IO.read(xcconfig_path).gsub("DT_TOOLCHAIN_DIR", "TOOLCHAIN_DIR"))
+        end
+      end
+  
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        xcconfig_path = config.base_configuration_reference.real_path
+        xcconfig = File.read(xcconfig_path)
+        xcconfig_mod = xcconfig.gsub(/DT_TOOLCHAIN_DIR/, "TOOLCHAIN_DIR")
+        File.open(xcconfig_path, "w") { |file| file << xcconfig_mod }
+        if config.base_configuration_reference.is_a? Xcodeproj::Project::Object::PBXFileReference
+            xcconfig_path = config.base_configuration_reference.real_path
+            IO.write(xcconfig_path, IO.read(xcconfig_path).gsub("DT_TOOLCHAIN_DIR", "TOOLCHAIN_DIR"))
+        end
+      end
+    end  
+    react_native_post_install(installer,
+          config[:reactNativePath],
+      # Set `mac_catalyst_enabled` to `true` in order to apply patches
+      # necessary for Mac Catalyst builds
+      :mac_catalyst_enabled => false)
+
+    # __apply_Xcode_12_5_M1_post_install_workaround(installer)
+  # This is necessary for Xcode 14, because it signs resource bundles by default
     # when building for devices.
     installer.target_installation_results.pod_target_installation_results
       .each do |pod_name, target_installation_result|
@@ -81,13 +168,50 @@ target 'showcases' do
         end
       end
     end
-  end
+    installer.aggregate_targets.each do |aggregate_target|
+      aggregate_target.user_project.native_targets.each do |target|
+        target.build_configurations.each do |config|
+          config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
+          config.build_settings['EXCLUDED_ARCHS'] = 'i386'
+        end
+      end
+      aggregate_target.user_project.save
+    end
 
-  post_integrate do |installer|
-    begin
-      expo_patch_react_imports!(installer)
-    rescue => e
-      Pod::UI.warn e
+    # Workaround `Cycle inside FBReactNativeSpec` error for react-native 0.64
+    # Reference: https://github.com/software-mansion/react-native-screens/issues/842#issuecomment-812543933
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        # unless ['React-Core', 'React-RCTText'].include? target.name
+        #   config.build_settings["USE_HEADERMAP"] = "NO"
+        # end
+        target.build_configurations.each do |config|
+          config.build_settings["ONLY_ACTIVE_ARCH"] = "NO"
+        end
+      end
+      if target.name == 'react-native-google-maps'
+        target.build_configurations.each do |config|
+          config.build_settings['CLANG_ENABLE_MODULES'] = 'No'
+        end
+      end
+      if (target.name&.eql?('FBReactNativeSpec'))
+        target.build_phases.each do |build_phase|
+          if (build_phase.respond_to?(:name) && build_phase.name.eql?('[CP-User] Generate Specs'))
+            target.build_phases.move(build_phase, 0)
+          end
+        end
+      end
+      if cio_target_names.include? target.name 
+        puts "Modifying target #{target.name}"
+    
+        target.build_configurations.each do |config|
+          puts "Setting build config settings for #{target.name}"
+          config.build_settings['APPLICATION_EXTENSION_API_ONLY'] ||= 'NO'
+        end
+      end
     end
   end
+
 end
+
+
