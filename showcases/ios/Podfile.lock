@@ -361,7 +361,6 @@ PODS:
     - lottie-ios (~> 4.3.3)
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
-  - mobile-ffmpeg-https-gpl (4.4.LTS)
   - nanopb (3.30910.0):
     - nanopb/decode (= 3.30910.0)
     - nanopb/encode (= 3.30910.0)
@@ -1275,9 +1274,6 @@ PODS:
     - FBSDKGamingServicesKit (~> 17.4)
     - FBSDKShareKit (~> 17.4)
     - React-Core
-  - react-native-ffmpeg/https-gpl-lts (0.5.2):
-    - mobile-ffmpeg-https-gpl (= 4.4.LTS)
-    - React
   - react-native-get-random-values (1.8.0):
     - React-Core
   - react-native-idfa (4.1.0):
@@ -1644,7 +1640,6 @@ DEPENDENCIES:
   - react-native-charts-wrapper (from `../node_modules/react-native-charts-wrapper`)
   - "react-native-cookies (from `../node_modules/@react-native-cookies/cookies`)"
   - react-native-fbsdk-next (from `../node_modules/react-native-fbsdk-next`)
-  - react-native-ffmpeg/https-gpl-lts (from `../node_modules/react-native-ffmpeg/react-native-ffmpeg.podspec`)
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - react-native-idfa (from `../node_modules/react-native-idfa`)
   - react-native-in-app-review (from `../node_modules/react-native-in-app-review`)
@@ -1760,7 +1755,6 @@ SPEC REPOS:
     - Kingfisher
     - libevent
     - lottie-ios
-    - mobile-ffmpeg-https-gpl
     - nanopb
     - PhotoEditorSDK
     - PromisesObjC
@@ -1905,8 +1899,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-cookies/cookies"
   react-native-fbsdk-next:
     :path: "../node_modules/react-native-fbsdk-next"
-  react-native-ffmpeg:
-    :podspec: "../node_modules/react-native-ffmpeg/react-native-ffmpeg.podspec"
   react-native-get-random-values:
     :path: "../node_modules/react-native-get-random-values"
   react-native-idfa:
@@ -2119,7 +2111,6 @@ SPEC CHECKSUMS:
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   lottie-ios: 3d98679b41fa6fd6aff2352b3953dbd3df8a397e
   lottie-react-native: 47647f2d687cc522179dc473650e4e5101021786
-  mobile-ffmpeg-https-gpl: 5fe65b79a771ad9a4d262b92fb818e1950a6bc97
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PhotoEditorSDK: 8987e884655709757a7031f8407f505617a50fb8
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
@@ -2152,7 +2143,6 @@ SPEC CHECKSUMS:
   react-native-charts-wrapper: cd83d9b1acb8e06ebd18bf297de597906e1cc87d
   react-native-cookies: f54fcded06bb0cda05c11d86788020b43528a26c
   react-native-fbsdk-next: b430fc002cf9b8675b8688d43fe6eddd5ff4e029
-  react-native-ffmpeg: 587fa045f985d775107f4b8cbb6c79df0ad68e63
   react-native-get-random-values: a6ea6a8a65dc93e96e24a11105b1a9c8cfe1d72a
   react-native-idfa: 7a029b76f4d5dff76efa6fe4b86be8fadd71c49f
   react-native-in-app-review: db8bb167a5f238e7ceca5c242d6b36ce8c4404a4
@@ -2222,6 +2212,6 @@ SPEC CHECKSUMS:
   VideoEditorSDK: 8b86a2e8652aa277221bfcf249b3498e6cc5e533
   Yoga: 805bf71192903b20fc14babe48080582fee65a80
 
-PODFILE CHECKSUM: c478ac8e25cc1183f852513f2d9c14882942bd17
+PODFILE CHECKSUM: 7806ec14546404dbee79220d1c22821444d1f949
 
 COCOAPODS: 1.16.2

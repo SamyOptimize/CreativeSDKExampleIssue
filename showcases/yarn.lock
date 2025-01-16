@@ -9482,13 +9482,13 @@ expo-blur@~12.9.2:
   resolved "https://registry.yarnpkg.com/expo-blur/-/expo-blur-12.9.2.tgz#16d27c5d446fde0442d4f11d38b69611ca29f26b"
   integrity sha512-q+EIOkXw7OCE3VBTLRANsUIdMxtFWDTFpaMulJEXMwtxNQaCcAvzHZvwWP9dlI96FM4A6UdX2/slBNfNJzJcCQ==
 
-expo-build-properties@~0.11.1:
-  version "0.11.1"
-  resolved "https://registry.yarnpkg.com/expo-build-properties/-/expo-build-properties-0.11.1.tgz#dc9ab9fb1ac989b97da500b3ec75139c961d8b26"
-  integrity sha512-m4j4aEjFaDuBE6KWYMxDhWgLzzSmpE7uHKAwtvXyNmRK+6JKF0gjiXi0sXgI5ngNppDQpsyPFMvqG7uQpRuCuw==
+expo-build-properties@^0.13.2:
+  version "0.13.2"
+  resolved "https://registry.yarnpkg.com/expo-build-properties/-/expo-build-properties-0.13.2.tgz#c9cef927fc8236551d940da4fd8dc1332e2d052d"
+  integrity sha512-ML2GwBgn0Bo4yPgnSGb7h3XVxCigS/KFdid3xPC2HldEioTP3UewB/2Qa4WBsam9Fb7lAuRyVHAfRoA3swpDzg==
   dependencies:
     ajv "^8.11.0"
-    semver "^7.5.3"
+    semver "^7.6.0"
 
 expo-constants@~15.4.0, expo-constants@~15.4.6:
   version "15.4.6"
@@ -14147,11 +14147,6 @@ react-native-fbsdk-next@^13.1.1:
   version "13.3.0"
   resolved "https://registry.yarnpkg.com/react-native-fbsdk-next/-/react-native-fbsdk-next-13.3.0.tgz#1f1457a23c5ed0726b19694fad24082bfe2cf4e3"
   integrity sha512-t2HTHx77yB6Awj6VZpCbEslmRBEgSxqqGM85Jg6t1d1kupho4b3iX2hgR/mfDzjWAqoXnZIAkvN4tNnGTWc7KA==
-
-react-native-ffmpeg@^0.5.2:
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/react-native-ffmpeg/-/react-native-ffmpeg-0.5.2.tgz#4c60fa4e773ae82ed59628a5f23dd86f74f1c8f5"
-  integrity sha512-YxKWI9kPo4nDtAzNO+MIMIu56rfaixJrviQBKvdvmFD09oWH0GhKurJ+uJOvTbN3T7eEYCE0kUzK1puPDsniAA==
 
 react-native-flash-message@^0.4.0:
   version "0.4.2"
